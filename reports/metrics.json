@@ -1,0 +1,35 @@
+{
+  "selected_model": "Random Forest",
+  "random_state": 42,
+  "environment": {
+    "scikit_learn": "1.6.1",
+    "numpy": "1.26.4",
+    "pandas": "2.3.3"
+  },
+  "split_rows": {
+    "train": 170235,
+    "validation": 56745,
+    "test": 56746
+  },
+  "validation_average_precision": {
+    "Logistic Regression": 0.7868262715721102,
+    "Random Forest": 0.8487695344812274
+  },
+  "threshold": 0.47962919009168814,
+  "test_accuracy": 0.9993832164381631,
+  "test_precision": 0.8846153846153846,
+  "test_recall": 0.7263157894736842,
+  "test_f1": 0.7976878612716763,
+  "test_average_precision": 0.7701138413792161,
+  "confusion_matrix": [
+    [
+      56642,
+      9
+    ],
+    [
+      26,
+      69
+    ]
+  ],
+  "data_sha256": "76274b691b16a6c49d3f159c883398e03ccd6d1ee12d9d8ee38f4b4b98551a89"
+}

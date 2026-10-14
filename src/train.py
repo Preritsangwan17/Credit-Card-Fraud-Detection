@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sklearn
 from pathlib import Path
 
 import joblib
@@ -27,6 +28,7 @@ from sklearn.preprocessing import StandardScaler
 
 RANDOM_STATE = 42
 TARGET = "Class"
+FEATURES = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,6 +45,12 @@ def parse_args() -> argparse.Namespace:
         default=Path("models/creditcard_fraud_model.joblib"),
         help="Destination for the serialized model bundle.",
     )
+    parser.add_argument(
+        "--metrics",
+        type=Path,
+        default=Path("reports/metrics.json"),
+        help="Destination for the machine-readable evaluation report.",
+    )
     return parser.parse_args()
 
 
@@ -50,7 +58,9 @@ def choose_threshold(y_true: pd.Series, probabilities: np.ndarray) -> float:
     """Return the validation threshold that maximizes F1."""
     precision, recall, thresholds = precision_recall_curve(y_true, probabilities)
     f1_values = (
-        2 * precision[:-1] * recall[:-1]
+        2
+        * precision[:-1]
+        * recall[:-1]
         / np.maximum(precision[:-1] + recall[:-1], 1e-12)
     )
     return float(thresholds[int(np.argmax(f1_values))])
@@ -67,8 +77,18 @@ def main() -> None:
     if TARGET not in data.columns:
         raise ValueError(f"Expected a '{TARGET}' target column.")
 
-    X = data.drop(columns=TARGET)
+    missing = [name for name in FEATURES if name not in data]
+    if missing:
+        raise ValueError(f"Missing required features: {missing}")
+    X = data[FEATURES].apply(pd.to_numeric, errors="raise")
+    if X.empty or not np.isfinite(X.to_numpy(dtype=float)).all():
+        raise ValueError("Features must be finite numeric values")
     y = data[TARGET]
+    if (
+        not y.isin([0, 1]).all()
+        or y.value_counts().reindex([0, 1], fill_value=0).min() < 5
+    ):
+        raise ValueError("Class must be 0/1, with at least 5 rows of each class")
 
     X_dev, X_test, y_dev, y_test = train_test_split(
         X,
@@ -128,6 +148,17 @@ def main() -> None:
     test_predictions = (test_probabilities >= threshold).astype(int)
     metrics = {
         "selected_model": best_name,
+        "random_state": RANDOM_STATE,
+        "environment": {
+            "scikit_learn": sklearn.__version__,
+            "numpy": np.__version__,
+            "pandas": pd.__version__,
+        },
+        "split_rows": {
+            "train": len(y_train),
+            "validation": len(y_val),
+            "test": len(y_test),
+        },
         "validation_average_precision": validation_scores,
         "threshold": threshold,
         "test_accuracy": float(accuracy_score(y_test, test_predictions)),
@@ -152,10 +183,11 @@ def main() -> None:
         args.output,
     )
 
+    args.metrics.parent.mkdir(parents=True, exist_ok=True)
+    args.metrics.write_text(json.dumps(metrics, indent=2) + "\n")
     print(json.dumps(metrics, indent=2))
     print(f"Saved model bundle to {args.output}")
 
 
 if __name__ == "__main__":
     main()
-

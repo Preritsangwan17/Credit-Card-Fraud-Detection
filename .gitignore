@@ -19,3 +19,13 @@ predictions*.csv
 .idea/
 .vscode/
 
+# Local development and generated output
+.pytest_cache/
+*.pyc
+.env
+artifacts/
+logs/
+.ruff_cache/
+*.egg-info/
+build/
+dist/

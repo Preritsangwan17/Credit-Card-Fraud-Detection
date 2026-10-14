@@ -7,6 +7,7 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
+import numpy as np
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,7 +39,14 @@ def main() -> None:
     if missing:
         raise ValueError(f"Missing required feature columns: {missing}")
 
-    probabilities = model.predict_proba(transactions[features])[:, 1]
+    inputs = transactions[features].apply(pd.to_numeric, errors="raise")
+    if inputs.empty or not np.isfinite(inputs.to_numpy(dtype=float)).all():
+        raise ValueError(
+            "Input features must contain finite numeric values and at least one row"
+        )
+    if not 0 <= threshold <= 1:
+        raise ValueError("Model threshold must be between 0 and 1")
+    probabilities = model.predict_proba(inputs)[:, 1]
     predictions = (probabilities >= threshold).astype(int)
 
     results = transactions.copy()
@@ -58,4 +66,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

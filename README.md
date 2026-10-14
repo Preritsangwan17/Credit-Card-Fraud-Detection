@@ -1,3 +1,7 @@
+![Credit Card Fraud Detection](docs/assets/banner.svg)
+
+[![CI](https://github.com/Preritsangwan17/Credit-Card-Fraud-Detection/actions/workflows/ci.yml/badge.svg)](https://github.com/Preritsangwan17/Credit-Card-Fraud-Detection/actions/workflows/ci.yml)
+
 # Credit Card Fraud Detection
 
 An end-to-end machine-learning project for detecting fraudulent credit-card transactions in a highly imbalanced dataset. The project compares Logistic Regression and Random Forest, selects the stronger model using validation Average Precision, tunes the classification threshold on validation data, and evaluates the final model once on a held-out test set.
@@ -14,33 +18,23 @@ An end-to-end machine-learning project for detecting fraudulent credit-card tran
 
 ## Model-development architecture
 
-```text
-creditcard.csv
-      |
-      v
-Remove exact duplicates
-      |
-      v
-Stratified split: 60% train / 20% validation / 20% final test
-      |
-      +--> Logistic Regression (scale Time and Amount)
-      |
-      +--> Random Forest (class-balanced subsampling)
-                  |
-                  v
-     Select highest validation Average Precision
-                  |
-                  v
-     Tune threshold on validation precision-recall curve
-                  |
-                  v
-       Evaluate once on untouched final test data
-                  |
-                  v
-     Save model + threshold + feature names
+```mermaid
+flowchart TD
+  D["Anonymized transactions"] --> S["Deduplicate and split"]
+  S --> T["Training: fit two models"]
+  S --> V["Validation: select model and threshold"]
+  T --> V
+  V --> E["Test: report performance once"]
+  E --> A["Save model, threshold and features"]
 ```
 
-## Results from the completed notebook
+## Reproduced evaluation
+
+The full uploaded dataset was evaluated again during this refresh using `src/train.py`, seed 42,
+and scikit-learn 1.6.1. After deduplication: 170,235 training rows, 56,745 validation rows and
+56,746 test rows. The [evaluation record](reports/metrics.json) includes dataset SHA-256 and
+runtime versions. The following table describes this fresh run; the included saved model is the
+original notebook artifact, so retrain to obtain the artifact for this exact report.
 
 ### Validation model comparison
 
@@ -59,7 +53,7 @@ Random Forest was selected. The validation-tuned decision threshold was `0.47962
 | Precision | **0.884615** |
 | Recall | **0.726316** |
 | F1 score | **0.797688** |
-| Average Precision | **0.769861** |
+| Average Precision | **0.770114** |
 
 Final confusion matrix:
 
@@ -117,7 +111,7 @@ After placing `creditcard.csv` inside `data/`, train and save a fresh model:
 python src/train.py
 ```
 
-Run predictions on a CSV containing the 30 input features:
+Run predictions on a CSV containing the 30 input features (the target column is optional):
 
 ```bash
 python src/predict.py --input data/creditcard.csv --output predictions.csv
@@ -128,6 +122,17 @@ To explore the work step by step:
 ```bash
 jupyter lab notebooks/credit_card_fraud_detection.ipynb
 ```
+
+## Evaluation limits
+
+- The notebook preserves the original learning sequence, including an early exploratory baseline.
+  Its earlier test split overlaps the later experiment; use `src/train.py` for one consistent benchmark.
+- Random stratified splits measure this dataset experiment, not future production fraud performance.
+  Temporal validation and transaction-group leakage checks are still needed for deployment.
+- Threshold tuning maximizes validation F1. A bank would choose a threshold using review capacity,
+  false-positive cost, missed-fraud cost and monitored recall.
+- Class weighting changes the score distribution. `fraud_probability` is a model score, not a calibrated
+  real-world risk estimate.
 
 ## Important model note
 
