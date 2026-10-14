@@ -6,6 +6,11 @@
 
 An end-to-end machine-learning project for detecting fraudulent credit-card transactions in a highly imbalanced dataset. The project compares Logistic Regression and Random Forest, selects the stronger model using validation Average Precision, tunes the classification threshold on validation data, and evaluates the final model once on a held-out test set.
 
+
+**Project status:** evaluated research baseline for rare-event classification.
+
+[Quick start](#quick-start) · [Results](#reproduced-evaluation) · [Architecture](#model-development-architecture) · [Model card](docs/MODEL_CARD.md) · [Contributing](CONTRIBUTING.md)
+
 ## Project highlights
 
 - Removes exact duplicate rows before model development.
@@ -30,11 +35,11 @@ flowchart TD
 
 ## Reproduced evaluation
 
-The full uploaded dataset was evaluated again during this refresh using `src/train.py`, seed 42,
+The recorded experiment uses `src/train.py` on the full dataset with seed 42
 and scikit-learn 1.6.1. After deduplication: 170,235 training rows, 56,745 validation rows and
 56,746 test rows. The [evaluation record](reports/metrics.json) includes dataset SHA-256 and
-runtime versions. The following table describes this fresh run; the included saved model is the
-original notebook artifact, so retrain to obtain the artifact for this exact report.
+runtime versions. The following tables describe the recorded run; the included saved model is the
+original notebook artifact. Retrain to create the artifact associated with this benchmark.
 
 ### Validation model comparison
 
@@ -66,22 +71,16 @@ Accuracy is shown for completeness, but it is not the main success metric becaus
 
 ## Repository structure
 
-```text
-.
-├── data/
-│   └── README.md
-├── models/
-│   ├── README.md
-│   └── creditcard_fraud_model.joblib
-├── notebooks/
-│   └── credit_card_fraud_detection.ipynb
-├── src/
-│   ├── predict.py
-│   └── train.py
-├── .gitignore
-├── README.md
-└── requirements.txt
-```
+| Path | Purpose |
+|---|---|
+| `src/train.py` | Model comparison, threshold selection and held-out evaluation |
+| `src/predict.py` | Batch prediction with the saved feature schema |
+| `notebooks/` | Original step-by-step exploration |
+| `models/` | Saved notebook artifact and artifact documentation |
+| `reports/metrics.json` | Reproduced evaluation with dataset fingerprint |
+| `examples/` | Illustrative input rows for the prediction command |
+| `data/README.md` | Dataset download instructions |
+| `tests/` | Training, prediction and schema regression checks |
 
 ## Dataset
 
@@ -102,7 +101,7 @@ git clone https://github.com/Preritsangwan17/Credit-Card-Fraud-Detection.git
 cd Credit-Card-Fraud-Detection
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 After placing `creditcard.csv` inside `data/`, train and save a fresh model:
@@ -114,7 +113,7 @@ python src/train.py
 Run predictions on a CSV containing the 30 input features (the target column is optional):
 
 ```bash
-python src/predict.py --input data/creditcard.csv --output predictions.csv
+python src/predict.py --input examples/transactions.csv --output predictions.csv
 ```
 
 To explore the work step by step:
@@ -137,6 +136,15 @@ jupyter lab notebooks/credit_card_fraud_detection.ipynb
 ## Important model note
 
 The included Joblib file was created with scikit-learn 1.6.1. Only load model files from trusted sources because serialized Python artifacts can execute code during loading.
+
+## Verification
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+The prediction example demonstrates the input contract. Its synthetic rows are not evidence of model accuracy.
 
 ## Author
 
