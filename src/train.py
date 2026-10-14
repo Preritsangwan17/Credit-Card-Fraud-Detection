@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import sklearn
 from pathlib import Path
 
@@ -146,9 +147,12 @@ def main() -> None:
 
     test_probabilities = best_model.predict_proba(X_test)[:, 1]
     test_predictions = (test_probabilities >= threshold).astype(int)
+    with args.data.open("rb") as data_file:
+        data_sha256 = hashlib.file_digest(data_file, "sha256").hexdigest()
     metrics = {
         "selected_model": best_name,
         "random_state": RANDOM_STATE,
+        "data_sha256": data_sha256,
         "environment": {
             "scikit_learn": sklearn.__version__,
             "numpy": np.__version__,
