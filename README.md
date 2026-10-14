@@ -144,3 +144,8 @@ The included Joblib file was created with scikit-learn 1.6.1. Only load model fi
 B.Tech CSE (AI/ML) student  
 GitHub: [@Preritsangwan17](https://github.com/Preritsangwan17)
 
+
+## Model documentation
+
+See the [model card](docs/MODEL_CARD.md) for the intended use, input contract, evaluation method and limitations.
+For the recorded numerical environment, install `requirements-repro.txt` in a fresh virtual environment.

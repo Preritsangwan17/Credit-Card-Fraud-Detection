@@ -183,6 +183,12 @@ def main() -> None:
             "model": best_model,
             "threshold": threshold,
             "features": list(X.columns),
+            "metadata": {
+                "selected_model": best_name,
+                "data_sha256": data_sha256,
+                "environment": metrics["environment"],
+                "random_state": RANDOM_STATE,
+            },
         },
         args.output,
     )
